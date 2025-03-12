@@ -261,13 +261,7 @@ num_partial = sum([num_pretalx_no_coi, num_coi_no_pretalx, num_no_show])
 num_reviewers, num_signed_up, num_pretalx_no_coi, num_coi_no_pretalx, num_no_show, num_partial
 
 # %%
-con.sql("select * from reviewers where instr(name, 'eli')")
-
-# %%
 # con.sql("table reviewers").df().to_csv("input/reviewers_to_assign_with_name.csv")
-
-# %%
-con.sql("select * from reviewers where instr(Name, 'Wu')")
 
 # %%
 sum([num_pretalx_no_coi, num_coi_no_pretalx, num_reviewers])
@@ -308,7 +302,7 @@ con.sql(
 create or replace table reviewers_with_tracks as
 with reviewers_no_dupes as (select distinct * from reviewers)
 select reviewers_no_dupes.name, email, list(tracks.name) as tracks, list(tracks.track_id) as track_ids from reviewers_no_dupes
-    join tracks on instr(reviewers_no_dupes.tracks, tracks.name)
+    join tracks on instr(lower(reviewers_no_dupes.tracks), lower(tracks.name))
     group by reviewers_no_dupes.name, email
 """  # noqa: E501
 )
@@ -338,8 +332,8 @@ select
     list(submissions_with_authors.submission_id) as submission_ids
 from
     reviewers
-    left join coi_authors on instr(coi, coi_authors.author)
-    left join pretalx_speakers on contains(coi_authors.author, pretalx_speakers.Name)
+    left join coi_authors on instr(lower(coi), lower(coi_authors.author))
+    left join pretalx_speakers on contains(coi_authors.author, lower(pretalx_speakers.Name))
     left join submissions_with_authors on contains(submissions_with_authors.speaker_ids, pretalx_speakers.ID)
 group by reviewers.name, reviewers.email
 order by reviewers.name
@@ -354,7 +348,7 @@ con.sql(
 with reviewers_with_coi_pre as (
     select name, email, author
     from reviewers
-    join coi_authors on instr(coi, coi_authors.author)
+    join coi_authors on instr(lower(coi), lower(coi_authors.author))
 )
 select count(*), author from reviewers_with_coi_pre anti join pretalx_speakers on contains(reviewers_with_coi_pre.author, pretalx_speakers.Name) group by author
 """  # noqa: E501
@@ -402,7 +396,7 @@ select
     string_split(\"Speaker IDs\", '\n') as author_ids,
     track_id as track
 from pretalx_sessions
-    join tracks on pretalx_sessions.Track = tracks.name
+    join tracks on lower(pretalx_sessions.Track) = tracks.name
 """
 )
 
@@ -416,3 +410,5 @@ con.sql("table submissions_to_assign").df()
 
 # %%
 con.close()
+
+# %%
