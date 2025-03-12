@@ -61,7 +61,7 @@ df_reviewers = df_reviewers.assign(assigned_submission_ids=[[]] * len(df_reviewe
 len(df_submissions), len(df_reviewers)
 
 # %%
-df_submissions[df_submissions.track == "TUT"]
+df_submissions[df_submissions.track == "tut"]
 
 # %% [markdown]
 # ## Step 1. Assign tutorial reviewers
@@ -72,7 +72,7 @@ MAX_TUTORIALS_PER_PERSON = 5
 MIN_REVIEWERS_PER_TUTORIAL = 3
 MAX_REVIEWERS_PER_TUTORIAL = 4
 
-df_submissions_tutorials = df_submissions[df_submissions.track == "TUT"]
+df_submissions_tutorials = df_submissions[df_submissions.track == "tut"]
 
 solution = solve_milp(
     df_reviewers,
@@ -131,7 +131,7 @@ MIN_REVIEWERS_PER_SUBMISSION = 2
 MAX_REVIEWERS_PER_SUBMISSION = 4
 
 df_reviewers_no_submissions = df_reviewers_with_tut[df_reviewers_with_tut.assigned_submission_ids.apply(len) == 0]
-df_submissions_no_tutorials = df_submissions[df_submissions.track != "TUT"]
+df_submissions_no_tutorials = df_submissions[df_submissions.track != "tut"]
 
 solution = solve_milp(
     df_reviewers_no_submissions,
@@ -319,7 +319,21 @@ select string_agg(reviewer_id), count(reviewer_id), string_agg(tracks), len(assi
 con.close()
 
 # %% [markdown]
-# ## Final export
+# ## Some additional ibis checks
+
+# %%
+import ibis
+from ibis import _
+
+con = ibis.duckdb.connect(data_dir / "assign_reviews.db")
+
+t = con.tables.reviewer_assignments_02
+
+# Check that there are no intersections between assigned submission ids and conflicted submission ids
+assert t.conflicts_submission_ids.intersect(t.assigned_submission_ids).length().max().to_pandas() == 0
+
+# Check that there are no reviewers with more than 9 reviews assigned
+assert t.assigned_submission_ids.length().max().to_pandas() <= 9
 
 # %%
 database_file = data_dir / "assign_reviews.db"
