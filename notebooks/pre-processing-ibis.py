@@ -48,31 +48,34 @@ raw_files = dict(
     tracks=data_dir / "tracks.csv",  # manual mapping of arbitrary track id to track names
 )
 
-# %%
-for table_name, file_name in raw_files.items():
-    con.read_csv(file_name, table_name=table_name)
 
 # %% [markdown]
-# Load all the tables into variables, normalize column names, lowercase the world
+# Read in the CSVs (creates a view), then normalize column names and lowercase all string columns
+# Then write the tables out to the DuckDB database so that some of the inline SQL below can access them
+
 
 # %%
-scipy_reviewers = con.tables.scipy_reviewers
-pretalx_reviewers = con.tables.pretalx_reviewers
-pretalx_sessions = con.tables.pretalx_sessions
-coi_reviewers = con.tables.coi_reviewers
-coi_authors = con.tables.coi_authors
-tracks = con.tables.tracks
-
-
 def _process_strings(table):
     return table.rename("snake_case").mutate(s.across(s.of_type("str"), _.lower()))
 
 
-scipy_reviewers = _process_strings(scipy_reviewers)
-pretalx_reviewers = _process_strings(pretalx_reviewers)
-pretalx_sessions = _process_strings(pretalx_sessions)
-coi_reviewers = _process_strings(coi_reviewers)
-coi_authors = _process_strings(coi_authors)
+for table_name, file_name in raw_files.items():
+    t = con.read_csv(file_name)
+    t = _process_strings(t)
+    con.create_table(table_name, t, overwrite=True)
+
+# %% [markdown]
+# Load all the tables into variables
+
+# %%
+coi_authors = con.tables.coi_authors
+coi_reviewers = con.tables.coi_reviewers
+pretalx_reviewers = con.tables.pretalx_reviewers
+pretalx_sessions = con.tables.pretalx_sessions
+pretalx_speakers = con.tables.pretalx_speakers
+scipy_reviewers = con.tables.scipy_reviewers
+tracks = con.tables.tracks
+
 
 # %%
 # ungainly column names
@@ -97,7 +100,6 @@ dupes = (
 )
 
 # %%
-
 reviewers = (
     scipy_reviewers.join(pretalx_reviewers, "email")
     .drop("name_right")
@@ -144,7 +146,9 @@ ghosted_reviewers = (
 
 # %%
 # reviewers_with_tracks = reviewers.join(tracks)
+
 con.create_table("reviewers", reviewers, overwrite=True)
+
 con.raw_sql(
     """
 create or replace table reviewers_with_tracks as
@@ -157,6 +161,7 @@ select reviewers_no_dupes.name, email, list(tracks.name) as tracks, list(tracks.
 
 reviewers_with_tracks = con.tables.reviewers_with_tracks.distinct()
 
+
 con.raw_sql(
     """
 create or replace table reviewers_with_coi as
@@ -164,7 +169,7 @@ create or replace table reviewers_with_coi as
 with submissions_with_authors as (
     select
         id as submission_id,
-        \"Speaker IDs\" as speaker_ids
+        speaker_ids
     from
         pretalx_sessions
 )
@@ -185,7 +190,6 @@ order by reviewers.name
 )
 
 reviewers_with_coi = con.tables.reviewers_with_coi
-
 
 conflicted_check = con.sql(
     """
@@ -208,5 +212,5 @@ submissions_to_assign = pretalx_sessions.join(tracks, pretalx_sessions.track == 
     submission_id=_["id"], author_ids=_.speaker_ids.split(", "), track=_.track_id
 )
 
-con.create_table("submissions_to_assign", submissions_to_assign)
-con.create_table("reviewers_to_assign", reviewers_to_assign)
+con.create_table("submissions_to_assign", submissions_to_assign, overwrite=True)
+con.create_table("reviewers_to_assign", reviewers_to_assign, overwrite=True)
