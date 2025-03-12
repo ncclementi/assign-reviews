@@ -249,7 +249,9 @@ con.sql("table reviewer_assignments_02")
 
 # %%
 con.sql(
-    "select count(*), string_agg(reviewer_id), len(assigned_submission_ids) as num_submissions from reviewer_assignments_02 group by num_submissions"  # noqa: E501
+    #"select count(*), string_agg(reviewer_id), len(assigned_submission_ids) as num_submissions from reviewer_assignments_02 group by num_submissions"  # noqa: E501
+        "select count(*), len(assigned_submission_ids) as num_submissions from reviewer_assignments_02 group by num_submissions"  # noqa: E501
+
 )
 
 # %%
@@ -276,18 +278,20 @@ con.sql("table submission_assignments_02")
 
 # %%
 con.sql(
-    """
-select string_agg(submission_id), count(track), len(assigned_reviewer_ids) from submission_assignments_02 group by len(assigned_reviewer_ids)
-"""  # noqa: E501
+#select string_agg(submission_id), count(track), len(assigned_reviewer_ids) from submission_assignments_02 group by len(assigned_reviewer_ids)
+"select track, len(assigned_reviewer_ids) from submission_assignments_02 group by track, len(assigned_reviewer_ids) order by 2 DESC"
 )
 
 # %% [markdown]
 # Step 1: Only tutorial assignments
 
 # %%
+con.sql("table reviewer_assignments_00")
+
+# %%
 con.sql(
     """
-select string_agg(reviewer_id), count(reviewer_id), string_agg(tracks), len(assigned_submission_ids) from reviewer_assignments_00 group by len(assigned_submission_ids)
+select count(reviewer_id), len(assigned_submission_ids) from reviewer_assignments_00 group by len(assigned_submission_ids)
 """  # noqa: E501
 )
 
@@ -334,3 +338,5 @@ with open(output_dir / "reviewer-assignments.json", "w") as fp:
 
 # %%
 con.close()
+
+# %%

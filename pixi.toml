@@ -19,10 +19,9 @@ scipy = ">=1.10.0"
 pandas = ">=2.2.0"
 notebook = ">=7.1.2"
 jupytext = ">=1.10.0"
-
-[pypi-dependencies]
-duckdb = { version = ">=0.10.0" }
-duckdb-engine = { version = ">=0.11.2" }
+ibis-duckdb = ">=10.2.0,<11"
+ipython = ">=9.0.2,<10"
+python-duckdb = ">=1.2.0,<2"
 
 [feature.test.tasks]
 test = "coverage run --module pytest tests/"
