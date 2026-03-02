@@ -33,7 +33,7 @@ from ibis import _
 ibis.options.interactive = True
 
 # %%
-data_dir = Path("/home/gil") / "github.com" / "scipy-conference" / "assign-reviews" / "data"
+data_dir = Path(__file__).resolve().parent.parent / "data"
 
 con = ibis.duckdb.connect(data_dir / "assign_reviews.db")
 
@@ -60,7 +60,7 @@ def _process_strings(table):
 
 
 for table_name, file_name in raw_files.items():
-    t = con.read_csv(file_name)
+    t = con.read_csv(file_name, strict_mode=False)
     t = _process_strings(t)
     con.create_table(table_name, t, overwrite=True)
 
