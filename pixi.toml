@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Workflow to assign reviewers for the SciPy Conference"
 authors = [
     "Guen Prawiroatmodjo",
-    "Matthew Feickert <matthew.feickert@cern.ch>"
+    "Matthew Feickert <matthew.feickert@cern.ch>",
+    "Gil Forsyth",
+    "Naty Clementi",
 ]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64"]
