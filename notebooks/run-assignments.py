@@ -276,7 +276,8 @@ con.sql("table submission_assignments_02")
 
 # %%
 con.sql(
-    "select string_agg(submission_id), count(track), len(assigned_reviewer_ids) from submission_assignments_02 group by len(assigned_reviewer_ids)"
+    "select string_agg(submission_id), count(track), len(assigned_reviewer_ids) "
+    "from submission_assignments_02 group by len(assigned_reviewer_ids)"
 )
 
 # %% [markdown]
@@ -319,8 +320,8 @@ con.close()
 # ## Some additional ibis checks
 
 # %%
-import ibis
-from ibis import _
+import ibis  # noqa: E402
+from ibis import _  # noqa: E402, F401
 
 con = ibis.duckdb.connect(data_dir / "assign_reviews.db")
 

@@ -51,7 +51,9 @@ con = duckdb.connect(str(database_file))
 
 # %%
 def create_and_show_table(file_name, table_name, show=True):
-    con.sql(f'create or replace table {table_name} as select * from read_csv("{file_name}", header=true, strict_mode=false)')
+    con.sql(
+        f'create or replace table {table_name} as select * from read_csv("{file_name}", header=true, strict_mode=false)'
+    )
     # Strip whitespace/newlines from column names (some CSVs have embedded newlines in headers)
     cols = con.sql(
         f"select column_name, data_type from information_schema.columns where table_name = '{table_name}'"

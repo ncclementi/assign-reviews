@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "assign-reviews"
 version = "0.1.0"
 description = "Workflow to assign reviewers for the SciPy Conference"
