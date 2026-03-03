@@ -51,7 +51,24 @@ con = duckdb.connect(str(database_file))
 
 # %%
 def create_and_show_table(file_name, table_name, show=True):
-    con.sql(f'create or replace table {table_name} as select * from read_csv("{file_name}", header=true)')
+    con.sql(f'create or replace table {table_name} as select * from read_csv("{file_name}", header=true, strict_mode=false)')
+    # Strip whitespace/newlines from column names (some CSVs have embedded newlines in headers)
+    cols = con.sql(
+        f"select column_name, data_type from information_schema.columns where table_name = '{table_name}'"
+    ).fetchall()
+    for col, dtype in cols:
+        clean_col = col.strip()
+        if clean_col != col:
+            con.sql(f'alter table {table_name} rename column "{col}" to "{clean_col}"')
+    # Lowercase all string columns to match ibis pre-processing behavior
+    select_exprs = []
+    for col, dtype in cols:
+        col = col.strip()
+        if dtype == "VARCHAR":
+            select_exprs.append(f'lower("{col}") as "{col}"')
+        else:
+            select_exprs.append(f'"{col}"')
+    con.sql(f'create or replace table {table_name} as select {", ".join(select_exprs)} from {table_name}')
     if show is True:
         return con.sql(f"table {table_name}")
 
