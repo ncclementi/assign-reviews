@@ -36,7 +36,7 @@ coverage = ">=7.0.0"
 [feature.lint.tasks]
 lint = "pre-commit run --all-files"
 ruff = "ruff check ."
-black = "black . --check --verbose"
+black = "black . --verbose"
 
 [feature.lint.dependencies]
 pre-commit = ">=3.7.0"

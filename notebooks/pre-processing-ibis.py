@@ -149,21 +149,18 @@ ghosted_reviewers = (
 
 con.create_table("reviewers", reviewers, overwrite=True)
 
-con.raw_sql(
-    """
+con.raw_sql("""
 create or replace table reviewers_with_tracks as
 with reviewers_no_dupes as (select distinct * from reviewers)
 select reviewers_no_dupes.name, email, list(tracks.name) as tracks, list(tracks.track_id) as track_ids from reviewers_no_dupes
     join tracks on instr(reviewers_no_dupes.tracks, tracks.name)
     group by reviewers_no_dupes.name, email
-"""  # noqa: E501
-)
+""")  # noqa: E501
 
 reviewers_with_tracks = con.tables.reviewers_with_tracks.distinct()
 
 
-con.raw_sql(
-    """
+con.raw_sql("""
 create or replace table reviewers_with_coi as
 
 with submissions_with_authors as (
@@ -186,21 +183,18 @@ from
     left join submissions_with_authors on contains(submissions_with_authors.speaker_ids, pretalx_speakers.ID)
 group by reviewers.name, reviewers.email
 order by reviewers.name
-"""
-)
+""")
 
 reviewers_with_coi = con.tables.reviewers_with_coi
 
-conflicted_check = con.sql(
-    """
+conflicted_check = con.sql("""
 with reviewers_with_coi_pre as (
     select name, email, author
     from reviewers
     join coi_authors on instr(coi, coi_authors.author)
 )
 select count(*), author from reviewers_with_coi_pre anti join pretalx_speakers on contains(reviewers_with_coi_pre.author, pretalx_speakers.Name) group by author
-"""  # noqa: E501
-).order_by(ibis.desc("count_star()"))
+""").order_by(ibis.desc("count_star()"))  # noqa: E501
 
 reviewers_to_assign = reviewers_with_coi.join(reviewers_with_tracks, "email").select(
     reviewer_id=reviewers_with_coi.email,
