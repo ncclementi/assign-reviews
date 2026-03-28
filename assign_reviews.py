@@ -20,6 +20,10 @@ DEBUG = True
 
 
 def create_objective_fun(df_reviewers, df_submissions, tutorial_coeff):
+    if not len(df_reviewers):
+        raise ValueError("No reviewers, likely due to inconsistency of track names")
+    if not len(df_submissions):
+        raise ValueError("No submissions, likely due to inconsistency of track names")
     reviewers = df_reviewers.to_dict("records")
     submissions = df_submissions.to_dict("records")
 
